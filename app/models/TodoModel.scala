@@ -13,24 +13,24 @@ case class Todo(
   deleted: Boolean
 )
 
-// Модель добавления новой таски
+// Модель добавления новой задачи
 case class TodoAddTask(
   title: String
 )
 
-// Модель изменения таски
+// Модель изменения задачи
 case class TodoUpdateTask(
   title: String,
   updated: java.sql.Timestamp
 )
 
-// Модель удаления таски
+// Модель удаления задачи
 case class TodoDeleteTask(
   deleted: Boolean,
   updated: java.sql.Timestamp
 )
 
-// Модель отметки выполнения таски
+// Модель отметки выполнения задачи
 case class TodoCompleteTask(
   completed: Boolean,
   updated: java.sql.Timestamp

@@ -1,15 +1,15 @@
 GET     /                           controllers.Main.RunApp()
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
-# Получить все таски
+# Получить все задачи
 GET     /todos/                     controllers.TodoController.getAllTasks
-# Получить таску по id
+# Получить задачу по id
 GET     /todos/:id                  controllers.TodoController.getTasks(id: Int)
-# Добавить новую таску
+# Добавить новую задачу
 POST    /todos                      controllers.TodoController.addTask
-## Удалить таску по id
+## Удалить задачу по id
 DELETE  /todos/:id                  controllers.TodoController.deleteTask(id: Int)
-# Обновить таску по id
+# Обновить задачу по id
 PATCH   /todos/:id                  controllers.TodoController.updateTask(id: Int)
 # Переключить статус выполнена по id
 PATCH   /todos/complete/:id         controllers.TodoController.completeTask(id: Int)
@@ -20,4 +20,4 @@ PATCH   /todos/complete_all/        controllers.TodoController.completeAll
 # Переключить статус НЕ выполнена всем таскам
 PATCH   /todos/uncomplete_all/      controllers.TodoController.uncompleteAll
 # Удалить все выполненые
-PATCH   /todos/delete_completed/    controllers.TodoController.deleteComplited
+PATCH   /todos/delete_completed/    controllers.TodoController.deleteCompleted

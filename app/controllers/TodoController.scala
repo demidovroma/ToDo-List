@@ -39,7 +39,7 @@ class TodoController @Inject() (
     }
   }
 
-  // Добавление новой таски
+  // Добавление новой задачи
   def addTask(): Action[JsValue] = Action.async(parse.json) { request =>
     val titleOpt = (request.body \ "title").asOpt[String]
 
@@ -125,8 +125,8 @@ class TodoController @Inject() (
   }
 
   // Удаление выполненых задач
-  def deleteComplited(): Action[AnyContent] = Action.async { implicit request =>
-    todoService.deleteComplited().map { updatedCount =>
+  def deleteCompleted(): Action[AnyContent] = Action.async { implicit request =>
+    todoService.deleteCompleted().map { updatedCount =>
       Ok(Json.obj("code" -> 0, "message" -> s"Marked $updatedCount tasks as deleted"))
     }
   }

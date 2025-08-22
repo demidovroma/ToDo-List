@@ -39,7 +39,7 @@ class TodoDAO @Inject()(
     db.run(todos.result)
   }
 
-  // Получения такси по id
+  // Получения задачи по id
   def getById(id: Int): Future[Option[Todo]] = {
     db.run(todos.filter(_.id === id).result.headOption)
   }
@@ -59,7 +59,7 @@ class TodoDAO @Inject()(
     db.run(insertQuery)
   }
 
-  // Метод обновления title такси по id
+  // Метод обновления title по id
   def updateTask(id: Int, updateInfo: models.TodoUpdateTask): Future[Int] = {
     val query = for { t <- todos if t.id === id } yield (t.title, t.updated)
     db.run(query.update((updateInfo.title, updateInfo.updated)))

@@ -99,7 +99,7 @@ class TodoService @Inject()(
   }
 
   // Удаление всех выполненых таск
-  def deleteComplited(): Future[Int] = {
+  def deleteCompleted(): Future[Int] = {
     val now = new java.sql.Timestamp(System.currentTimeMillis())
     todoDAO.deleteCompleted(timestamp = now)
   }
