@@ -17,5 +17,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "org.scalactic" %% "scalactic" % "3.2.19",
   "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+  "io.sentry" % "sentry-logback" % "6.20.0",
   "io.sentry" % "sentry" % "6.20.0"
 )

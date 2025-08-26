@@ -1,9 +1,10 @@
-package services
+package modules
+
+import javax.inject.Singleton
 
 import com.google.inject.{AbstractModule, Provides}
 import slick.basic.DatabaseConfig
 import slick.jdbc.MySQLProfile
-import javax.inject.Singleton
 
 class DatabaseModule extends AbstractModule {
 

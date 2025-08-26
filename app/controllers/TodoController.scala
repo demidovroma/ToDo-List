@@ -29,7 +29,7 @@ class TodoController @Inject() (
     }
   }
 
-  // Получение всех таск
+  // Получение одной таски по id
   def getTasks(id: Int): Action[AnyContent] = Action.async { implicit request =>
     todoService.getTask(id).map {
       case Some(todo) =>

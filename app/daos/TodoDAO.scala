@@ -94,4 +94,14 @@ class TodoDAO @Inject()(
       .update((task.deleted, task.updated))
     db.run(query)
   }
+
+  def countActiveTasks: Future[Int] = {
+    val query = todos.filter(_.completed === false).length.result
+    db.run(query)
+  }
+
+  def countCompletedTasks: Future[Int] = {
+    val query = todos.filter(_.completed === true).length.result
+    db.run(query)
+  }
 }

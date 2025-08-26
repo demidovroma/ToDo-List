@@ -21,3 +21,5 @@ PATCH   /todos/complete_all/        controllers.TodoController.completeAll
 PATCH   /todos/uncomplete_all/      controllers.TodoController.uncompleteAll
 # Удалить все выполненые
 PATCH   /todos/delete_completed/    controllers.TodoController.deleteCompleted
+
+GET     /sentry_test/               controllers.SentryController.testSentry

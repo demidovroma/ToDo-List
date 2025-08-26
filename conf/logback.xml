@@ -47,4 +47,13 @@
     <appender-ref ref="ASYNCSTDOUT"/>
   </root>
 
+  <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>ERROR</level>
+    </filter>
+  </appender>
+
+  <root level="ERROR">
+    <appender-ref ref="SENTRY"/>
+  </root>
 </configuration>
