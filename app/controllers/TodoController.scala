@@ -130,14 +130,14 @@ class TodoController @Inject()(
   }
 
   // Отметить все задачи как выполненные
-  def completeAll(): Action[AnyContent] = Action.async {
+  def completeAll: Action[AnyContent] = Action.async {
     todoService.completeAll()
       .map(rows => Ok(Json.obj("code" -> 0, "message" -> s"Выполнено $rows задач")))
       .recoverWith { case ex => handleError(ex, "Ошибка при завершении всех задач") }
   }
 
   // Отметить все задачи как невыполненные
-  def uncompleteAll(): Action[AnyContent] = Action.async {
+  def uncompleteAll: Action[AnyContent] = Action.async {
     todoService.uncompleteAll()
       .map(rows => Ok(Json.obj("code" -> 0, "message" -> s"Отменено выполнение $rows задач")))
       .recoverWith { case ex => handleError(ex, "Ошибка при отмене завершения всех задач") }
