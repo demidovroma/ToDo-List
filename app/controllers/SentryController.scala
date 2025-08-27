@@ -1,22 +1,19 @@
 package controllers
 
-import javax.inject.Inject
-
-import io.sentry.Sentry
+import javax.inject._
 import play.api.mvc._
+import io.sentry.Sentry
 
-class SentryController @Inject() (
-  val cc: ControllerComponents
-) extends AbstractController(cc) {
+@Singleton
+class SentryController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
-  def testSentry: Action[AnyContent] = Action {
+  def testSentry: Action[AnyContent] = Action { implicit request =>
     val enabled = Sentry.isEnabled
+
     if (enabled) {
-      Sentry.withScope { scope =>
-        scope.setTag("test", "true")
-        Sentry.captureMessage("Тестирование Sentry")
-      }
-      Ok("Событие отправлено")
+      val ex = new RuntimeException("Тестовая ошибка (handled) для Sentry")
+      Sentry.captureException(ex)
+      Ok("Ошибка отправлена в Sentry.")
     } else {
       BadRequest("Sentry не активен")
     }

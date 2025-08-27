@@ -1,20 +1,29 @@
 package modules
 
-import javax.inject.Singleton
+import anorm._
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment}
+import javax.inject._
+import java.sql.{Connection, DriverManager}
 
-import com.google.inject.{AbstractModule, Provides}
-import slick.basic.DatabaseConfig
-import slick.jdbc.MySQLProfile
+@Singleton
+class DatabaseModule @Inject()(config: Configuration) {
 
-class DatabaseModule extends AbstractModule {
+  private val user: String = sys.env.getOrElse("DB_USER", "sysdba")
+  private val password: String = sys.env.getOrElse("DB_PASS", "masterkey")
 
-  override def configure(): Unit = {
-    // Можно оставить пустым или добавить другие привязки
-  }
+  private val projectDir = System.getProperty("user.dir")
+  private val dbPath    = s"$projectDir/data/DATABASE.FDB"
+  private val url       = s"jdbc:firebirdsql://localhost:3050/$dbPath"
 
-  @Provides
-  @Singleton
-  def provideDatabaseConfig(): DatabaseConfig[MySQLProfile] = {
-    DatabaseConfig.forConfig[MySQLProfile]("slick.dbs.default")
+  // Подключение к БД
+  def withConnection[A](block: Connection => A): A = {
+    Class.forName("org.firebirdsql.jdbc.FBDriver")
+    val conn = DriverManager.getConnection(url, user, password)
+    try {
+      block(conn)
+    } finally {
+      conn.close()
+    }
   }
 }

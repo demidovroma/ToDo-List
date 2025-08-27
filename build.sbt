@@ -9,11 +9,10 @@ scalaVersion := "2.13.16"
 
 libraryDependencies ++= Seq(
   guice,
+  jdbc,
+  "org.firebirdsql.jdbc" % "jaybird" % "6.0.3",
+  "org.playframework.anorm" %% "anorm" % "2.7.0",
   "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % Test,
-  "org.playframework" %% "play-slick" % "6.2.0",
-  "org.playframework" %% "play-slick-evolutions" % "6.2.0",
-  "mysql" % "mysql-connector-java" % "8.0.33",
-  "com.zaxxer" % "HikariCP" % "3.4.5",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "org.scalactic" %% "scalactic" % "3.2.19",
   "org.scalatest" %% "scalatest" % "3.2.19" % "test",

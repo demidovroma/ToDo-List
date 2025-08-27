@@ -2,55 +2,30 @@ package models
 
 import java.sql.Timestamp
 import play.api.libs.json._
+import utils.JsonImplicits._
 
 // Модель данных таблицы
 case class Todo(
   id: Int,
   title: String,
   completed: Boolean,
-  created: java.sql.Timestamp,
-  updated: java.sql.Timestamp,
+  created: Timestamp,
+  updated: Timestamp,
   deleted: Boolean
 )
 
+object Todo {
+  implicit val format: OFormat[Todo] = Json.format[Todo]
+}
+
 // Модель добавления новой задачи
-case class TodoAddTask(
-  title: String
-)
+case class TodoAddTask(title: String)
+object TodoAddTask {
+  implicit val format: OFormat[TodoAddTask] = Json.format[TodoAddTask]
+}
 
 // Модель изменения задачи
-case class TodoUpdateTask(
-  title: String,
-  updated: java.sql.Timestamp
-)
-
-// Модель удаления задачи
-case class TodoDeleteTask(
-  deleted: Boolean,
-  updated: java.sql.Timestamp
-)
-
-// Модель отметки выполнения задачи
-case class TodoCompleteTask(
-  completed: Boolean,
-  updated: java.sql.Timestamp
-)
-
-object Todo {
-  // Имплиситный формат для Timestamp
-  implicit val timestampFormat: Format[Timestamp] = new Format[Timestamp] {
-    def writes(ts: Timestamp): JsValue = JsString(ts.toInstant.toString)
-    def reads(json: JsValue): JsResult[Timestamp] = json match {
-      case JsString(str) =>
-        try {
-          val instant = java.time.Instant.parse(str)
-          JsSuccess(Timestamp.from(instant))
-        } catch {
-          case e: Exception => JsError(e.getMessage)
-        }
-      case _ => JsError("Expected string for Timestamp")
-    }
-  }
-
-  implicit val todoFormat: Format[Todo] = Json.format[Todo]
+case class TodoUpdateTask(title: String)
+object TodoUpdateTask {
+  implicit val format: OFormat[TodoUpdateTask] = Json.format[TodoUpdateTask]
 }

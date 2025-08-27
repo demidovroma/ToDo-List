@@ -1,25 +1,18 @@
 GET     /                           controllers.Main.RunApp()
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
-# Получить все задачи
-GET     /todos/                     controllers.TodoController.getAllTasks
-# Получить задачу по id
-GET     /todos/:id                  controllers.TodoController.getTasks(id: Int)
-# Добавить новую задачу
+GET     /todos                      controllers.TodoController.getAllTasks
+GET     /todos/:id                  controllers.TodoController.getTask(id: Int)
 POST    /todos                      controllers.TodoController.addTask
-## Удалить задачу по id
+PUT     /todos/:id                  controllers.TodoController.updateTask(id: Int)
 DELETE  /todos/:id                  controllers.TodoController.deleteTask(id: Int)
-# Обновить задачу по id
-PATCH   /todos/:id                  controllers.TodoController.updateTask(id: Int)
-# Переключить статус выполнена по id
-PATCH   /todos/complete/:id         controllers.TodoController.completeTask(id: Int)
-# Переключить статус НЕ выполнена по id
-PATCH   /todos/uncomplete/:id       controllers.TodoController.uncompleteTask(id: Int)
-# Переключить статус выполнена всем таскам
-PATCH   /todos/complete_all/        controllers.TodoController.completeAll
-# Переключить статус НЕ выполнена всем таскам
-PATCH   /todos/uncomplete_all/      controllers.TodoController.uncompleteAll
-# Удалить все выполненые
-PATCH   /todos/delete_completed/    controllers.TodoController.deleteCompleted
 
-GET     /sentry_test/               controllers.SentryController.testSentry
+POST    /todos/:id/complete         controllers.TodoController.completeTask(id: Int)
+POST    /todos/:id/uncomplete       controllers.TodoController.uncompleteTask(id: Int)
+
+POST    /todos/completeAll          controllers.TodoController.completeAll
+POST    /todos/uncompleteAll        controllers.TodoController.uncompleteAll
+DELETE  /todos/completed/all        controllers.TodoController.deleteCompleted
+
+# Проверка Sentry
+GET     /sentry_test                controllers.SentryController.testSentry
