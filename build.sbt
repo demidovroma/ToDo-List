@@ -16,6 +16,8 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % Test,
   "org.scalactic" %% "scalactic" % "3.2.19",
   "org.scalatest" %% "scalatest" % "3.2.19" % Test,
-  "io.sentry" % "sentry-logback" % "6.20.0",
-  "io.sentry" % "sentry" % "6.20.0"
+  "com.typesafe.akka" %% "akka-stream" % "2.6.20",
+  "io.sentry" % "sentry-logback" % "7.17.0"
 )
+
+javaOptions += "-Dlogback.configurationFile=./conf/logback.xml"

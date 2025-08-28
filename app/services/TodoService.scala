@@ -2,49 +2,60 @@ package services
 
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
-import models._
+
 import daos.TodoDAO
+import models.dto.{TodoAdd, TodoResponse}
 
 @Singleton
-class TodoService @Inject()(todoDAO: TodoDAO)(implicit ec: ExecutionContext) {
+class TodoService @Inject()(
+  todoDAO: TodoDAO
+)(implicit ec: ExecutionContext) {
 
   // Получить все задачи
-  def getAll: Future[Seq[Todo]] =
-    Future { todoDAO.getAll }
+  def getAll: Future[Seq[TodoResponse]] =
+    todoDAO.getAll.map(_.map(TodoResponse.fromDb))
 
-  // Получения задачи по id
-  def getTask(id: Int): Future[Option[Todo]] =
-    Future { todoDAO.getById(id) }
+  // Получить только активные (не выполненные) задачи
+  def getActive: Future[Seq[TodoResponse]] =
+    todoDAO.getActive.map(_.map(TodoResponse.fromDb))
 
-  // Создать новую задачу
-  def addTask(task: TodoAddTask): Future[Todo] =
-    Future { todoDAO.addTask(task) }
+  // Получить только выполненные задачи
+  def getCompleted: Future[Seq[TodoResponse]] =
+    todoDAO.getCompleted.map(_.map(TodoResponse.fromDb))
+
+  // Получение задачи по id
+  def getById(id: Int): Future[Option[TodoResponse]] =
+    todoDAO.getById(id).map(_.map(TodoResponse.fromDb))
+
+  // Добавить задачу
+  def add(task: TodoAdd): Future[Option[TodoResponse]] =
+    todoDAO.add(task).map(_.map(TodoResponse.fromDb))
 
   // Обновление title задачи
-  def updateTask(id: Int, title: String): Future[Int] =
-    Future { todoDAO.updateTask(id, title) }
+  def update(id: Int, title: String): Future[Option[TodoResponse]] =
+    todoDAO.update(id, title).map(_.map(TodoResponse.fromDb))
 
   // Удалить задачу (deleted=true)
-  def deleteTask(id: Int): Future[Int] =
-    Future { todoDAO.deleteTask(id) }
+  def delete(id: Int): Future[Option[TodoResponse]] =
+    todoDAO.delete(id).map(_.map(TodoResponse.fromDb))
 
   // Отметить задачу как выполненную
-  def completeTask(id: Int): Future[Int] =
-    Future { todoDAO.completeTask(id) }
+  def complete(id: Int): Future[Option[TodoResponse]] =
+    todoDAO.complete(id).map(_.map(TodoResponse.fromDb))
 
   // Отметить задачу как невыполненную
-  def uncompleteTask(id: Int): Future[Int] =
-    Future { todoDAO.uncompleteTask(id) }
+  def uncomplete(id: Int): Future[Option[TodoResponse]] =
+    todoDAO.uncomplete(id).map(_.map(TodoResponse.fromDb))
 
   // Отметить все задачи как выполненные
-  def completeAll(): Future[Int] =
-    Future { todoDAO.completeAll() }
+  def completeAll(): Future[Seq[TodoResponse]] =
+    todoDAO.completeAll().map(_.map(TodoResponse.fromDb))
 
   // Отметить все задачи как невыполненные
-  def uncompleteAll(): Future[Int] =
-    Future { todoDAO.uncompleteAll() }
+  def uncompleteAll(): Future[Seq[TodoResponse]] =
+    todoDAO.uncompleteAll().map(_.map(TodoResponse.fromDb))
 
   // Удалить все выполненные задачи (soft delete)
-  def deleteCompleted(): Future[Int] =
-    Future { todoDAO.deleteCompleted() }
+  def deleteCompleted(): Future[Seq[TodoResponse]] =
+    todoDAO.deleteCompleted().map(_.map(TodoResponse.fromDb))
 }

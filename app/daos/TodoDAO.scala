@@ -3,128 +3,116 @@ package daos
 import javax.inject._
 
 import anorm._
-import anorm.SqlParser.get
 import java.sql.Connection
 
+import scala.concurrent.{ExecutionContext, Future, blocking}
+
 import modules.DatabaseModule
-import models.{Todo, TodoAddTask}
-import java.sql.Timestamp
+import models.db.Todo
+import models.dto.TodoAdd
+import models.implicits.ParserOps
 
 @Singleton
-class TodoDAO @Inject()(protected val dbModule: DatabaseModule) {
-
-  // Парсер для одной строки таблицы TODOS
-  private val todoParser: RowParser[Todo] = {
-
-    implicit val columnToTimestamp: Column[Timestamp] =
-      Column.nonNull { (value, meta) =>
-        value match {
-          case ts: Timestamp => Right(ts)
-          case d: java.util.Date => Right(new Timestamp(d.getTime))
-          case _ =>
-            Left(TypeDoesNotMatch(s"Cannot convert $value to Timestamp for column ${meta.column}"))
-        }
-      }
-
-    get[Int]("id") ~
-      get[String]("title") ~
-      get[Int]("completed") ~
-      get[Timestamp]("created") ~
-      get[Timestamp]("updated") ~
-      get[Int]("deleted") map {
-      case id ~ title ~ completed ~ created ~ updated ~ deleted =>
-        Todo(
-          id,
-          title,
-          completed != 0,
-          created,
-          updated,
-          deleted != 0
-        )
-    }
-  }
+class TodoDAO @Inject()(
+  dbModule: DatabaseModule
+)(implicit ec: ExecutionContext) extends ParserOps {
 
   // Получить все задачи
-  def getAll: Seq[Todo] = {
+  def getAll: Future[Seq[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"SELECT * FROM TODOS WHERE DELETED = 0 ORDER BY created DESC".as(todoParser.*)
+      SQL"SELECT * FROM TODOS WHERE DELETED = 0 ORDER BY ID DESC".as(todoParser.*)
     }
-  }
+  })
 
-  // Получения задачи по id
-  def getById(id: Int): Option[Todo] = {
+  // Получить все активные задачи
+  def getActive: Future[Seq[Todo]] = Future(blocking {
+    dbModule.withConnection { implicit conn: Connection =>
+      SQL"SELECT * FROM TODOS WHERE DELETED = 0 AND COMPLETED = 0".as(todoParser.*)
+    }
+  })
+
+  // Получить все выполненные задачи
+  def getCompleted: Future[Seq[Todo]] = Future(blocking {
+    dbModule.withConnection { implicit conn: Connection =>
+      SQL"SELECT * FROM TODOS WHERE DELETED = 0 AND COMPLETED = 1".as(todoParser.*)
+    }
+  })
+
+  // Получение задачи по id
+  def getById(id: Int): Future[Option[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
       SQL"SELECT * FROM TODOS WHERE ID = $id AND DELETED = 0".as(todoParser.singleOpt)
     }
-  }
+  })
 
   // Создать новую задачу
-  def addTask(task: TodoAddTask): Todo =
+  def add(task: TodoAdd): Future[Option[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      val now = new Timestamp(System.currentTimeMillis())
-
-      val id: Option[Int] =
+      val id: Option[Long] =
         SQL"""
-        INSERT INTO TODOS (TITLE, COMPLETED, CREATED, UPDATED, DELETED)
-        VALUES (${task.title}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
-      """.executeInsert(SqlParser.scalar[Int].singleOpt)
+          INSERT INTO TODOS (TITLE, COMPLETED, DELETED)
+          VALUES (${task.title}, 0, 0)
+        """.executeInsert()
 
-      Todo(
-        id = id.getOrElse(0),
-        title = task.title,
-        completed = false,
-        created = now,
-        updated = now,
-        deleted = false
-      )
+      id.flatMap { newId =>
+        SQL"SELECT * FROM TODOS WHERE ID = $newId".as(todoParser.singleOpt)
+      }
     }
+  })
 
   // Обновление title задачи
-  def updateTask(id: Int, title: String): Int = {
+  def update(id: Int, title: String): Future[Option[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET TITLE = $title, UPDATED = CURRENT_TIMESTAMP WHERE ID = $id".executeUpdate()
+      SQL"UPDATE TODOS SET TITLE = $title WHERE ID = $id".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE ID = $id".as(todoParser.singleOpt)
     }
-  }
+  })
 
-  // Удалить задачу (deleted=true)
-  def deleteTask(id: Int): Int = {
+  // Удалить задачу (deleted = true)
+  def delete(id: Int): Future[Option[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET DELETED = 1, UPDATED = CURRENT_TIMESTAMP WHERE ID = $id".executeUpdate()
+      SQL"UPDATE TODOS SET DELETED = 1 WHERE ID = $id".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE ID = $id".as(todoParser.singleOpt)
     }
-  }
+  })
 
   // Отметить задачу как выполненную
-  def completeTask(id: Int): Int = {
+  def complete(id: Int): Future[Option[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET COMPLETED = 1, UPDATED = CURRENT_TIMESTAMP WHERE ID = $id".executeUpdate()
+      SQL"UPDATE TODOS SET COMPLETED = 1 WHERE ID = $id".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE ID = $id".as(todoParser.singleOpt)
     }
-  }
+  })
 
   // Отметить задачу как невыполненную
-  def uncompleteTask(id: Int): Int = {
+  def uncomplete(id: Int): Future[Option[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET COMPLETED = 0, UPDATED = CURRENT_TIMESTAMP WHERE ID = $id".executeUpdate()
+      SQL"UPDATE TODOS SET COMPLETED = 0 WHERE ID = $id".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE ID = $id".as(todoParser.singleOpt)
     }
-  }
+  })
 
   // Отметить все задачи как выполненные
-  def completeAll(): Int = {
+  def completeAll(): Future[Seq[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET COMPLETED = 1, UPDATED = CURRENT_TIMESTAMP WHERE DELETED = 0 AND COMPLETED = 0".executeUpdate()
+      SQL"UPDATE TODOS SET COMPLETED = 1 WHERE DELETED = 0 AND COMPLETED = 0".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE DELETED = 0 AND COMPLETED = 1".as(todoParser.*)
     }
-  }
+  })
 
   // Отметить все задачи как невыполненные
-  def uncompleteAll(): Int = {
+  def uncompleteAll(): Future[Seq[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET COMPLETED = 0, UPDATED = CURRENT_TIMESTAMP WHERE DELETED = 0 AND COMPLETED = 1".executeUpdate()
+      SQL"UPDATE TODOS SET COMPLETED = 0 WHERE DELETED = 0 AND COMPLETED = 1".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE DELETED = 0 AND COMPLETED = 0".as(todoParser.*)
     }
-  }
+  })
 
   // Удалить все выполненные задачи (soft delete)
-  def deleteCompleted(): Int = {
+  def deleteCompleted(): Future[Seq[Todo]] = Future(blocking {
     dbModule.withConnection { implicit conn: Connection =>
-      SQL"UPDATE TODOS SET DELETED = 1, UPDATED = CURRENT_TIMESTAMP WHERE COMPLETED = 1".executeUpdate()
+      SQL"UPDATE TODOS SET DELETED = 1 WHERE COMPLETED = 1".executeUpdate()
+      SQL"SELECT * FROM TODOS WHERE DELETED = 1 AND COMPLETED = 1".as(todoParser.*)
     }
-  }
+  })
 }

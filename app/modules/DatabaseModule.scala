@@ -16,7 +16,6 @@ class DatabaseModule @Inject()(config: Configuration) {
   private val dbPath    = s"$projectDir/data/DATABASE.FDB"
   private val url       = s"jdbc:firebirdsql://localhost:3050/$dbPath"
 
-  // Подключение к БД
   def withConnection[A](block: Connection => A): A = {
     Class.forName("org.firebirdsql.jdbc.FBDriver")
     val conn = DriverManager.getConnection(url, user, password)

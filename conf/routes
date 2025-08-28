@@ -1,18 +1,16 @@
-GET     /                           controllers.Main.RunApp()
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /todos                      controllers.TodoController.getAll
+GET     /todos/active               controllers.TodoController.getActive
+GET     /todos/completed            controllers.TodoController.getCompleted
+GET     /todos/:id                  controllers.TodoController.getById(id: Int)
 
-GET     /todos                      controllers.TodoController.getAllTasks
-GET     /todos/:id                  controllers.TodoController.getTask(id: Int)
-POST    /todos                      controllers.TodoController.addTask()
-PUT     /todos/:id                  controllers.TodoController.updateTask(id: Int)
-DELETE  /todos/:id                  controllers.TodoController.deleteTask(id: Int)
+POST    /todos                      controllers.TodoController.add()
+PUT     /todos/:id                  controllers.TodoController.update(id: Int)
+DELETE  /todos/:id                  controllers.TodoController.delete(id: Int)
 
-POST    /todos/:id/complete         controllers.TodoController.completeTask(id: Int)
-POST    /todos/:id/uncomplete       controllers.TodoController.uncompleteTask(id: Int)
+POST    /todos/:id/complete         controllers.TodoController.complete(id: Int)
+POST    /todos/:id/uncomplete       controllers.TodoController.uncomplete(id: Int)
 
 POST    /todos/completeAll          controllers.TodoController.completeAll
 POST    /todos/uncompleteAll        controllers.TodoController.uncompleteAll
-DELETE  /todos/completed/all        controllers.TodoController.deleteCompleted()
 
-# Проверка Sentry
-GET     /sentry_test                controllers.SentryController.testSentry
+DELETE  /todos/completed/all        controllers.TodoController.deleteCompleted()
