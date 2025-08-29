@@ -1,6 +1,7 @@
 package controllers
 
 import javax.inject._
+
 import play.api.mvc._
 import play.api.libs.json._
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,6 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import services.TodoService
 import models.dto.{TodoAdd, TodoUpdate, ValidationError}
 import utils.{ErrorHandler, ValidationUtils}
+import utils.Messages.Todo._
 import models.implicits.JsonFormats._
 
 @Singleton
@@ -21,22 +23,22 @@ class TodoController @Inject()(
   // Получение всех задач
   def getAll: Action[AnyContent] = Action.async {
     todoService.getAll
-      .map(todos => Ok(Json.obj("code" -> 0, "message" -> "Ok", "data" -> todos)))
-      .recoverWith { case ex => handleError(ex, "Ошибка при получении списка задач") }
+      .map(todos => Ok(Json.obj("code" -> 0, "message" -> OkMsg, "data" -> todos)))
+      .recoverWith { case ex => handleError(ex, GetAllErrorMsg) }
   }
 
   // Получить активные задачи
   def getActive: Action[AnyContent] = Action.async {
     todoService.getActive
-      .map(todos => Ok(Json.obj("code" -> 0, "message" -> "Ok", "data" -> todos)))
-      .recoverWith { case ex => handleError(ex, "Ошибка при получении активных задач") }
+      .map(todos => Ok(Json.obj("code" -> 0, "message" -> OkMsg, "data" -> todos)))
+      .recoverWith { case ex => handleError(ex, GetActiveErrorMsg) }
   }
 
   // Получить выполненные задачи
   def getCompleted: Action[AnyContent] = Action.async {
     todoService.getCompleted
-      .map(todos => Ok(Json.obj("code" -> 0, "message" -> "Ok", "data" -> todos)))
-      .recoverWith { case ex => handleError(ex, "Ошибка при получении выполненных задач") }
+      .map(todos => Ok(Json.obj("code" -> 0, "message" -> OkMsg, "data" -> todos)))
+      .recoverWith { case ex => handleError(ex, GetCompletedErrorMsg) }
   }
 
   // Получение задачи по id
@@ -46,10 +48,10 @@ class TodoController @Inject()(
       case Right(_) =>
         todoService.getById(id)
           .map {
-            case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> "Ok", "data" -> todo))
-            case None       => NotFound(Json.toJson(ValidationError(404, s"Задача $id не найдена")))
+            case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> OkMsg, "data" -> todo))
+            case None       => NotFound(Json.toJson(ValidationError(404, NotFoundMsg(id))))
           }
-          .recoverWith { case ex => handleError(ex, s"Ошибка при получении задачи id=$id") }
+          .recoverWith { case ex => handleError(ex, GetByIdErrorMsg(id)) }
     }
   }
 
@@ -62,16 +64,16 @@ class TodoController @Inject()(
           errors =>
             Future.successful(
               BadRequest(Json.toJson(
-                ValidationError(400, "Некорректные данные для создания задачи: " + JsError.toJson(errors).toString())
+                ValidationError(400, AddIncorrectDataErrorMsg + JsError.toJson(errors).toString())
               ))
             ),
           task =>
             todoService.add(task)
               .map {
-                case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> "Задача успешно создана", "data" -> todo))
-                case None       => InternalServerError(Json.toJson(ValidationError(500, "Не удалось создать задачу")))
+                case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> CreatedMsg, "data" -> todo))
+                case None       => InternalServerError(Json.toJson(ValidationError(500, CreateFailedMsg)))
               }
-              .recoverWith { case ex => handleError(ex, s"Ошибка при создании задачи") }
+              .recoverWith { case ex => handleError(ex, CreatedErrorMsg) }
         )
     }
   }
@@ -85,16 +87,16 @@ class TodoController @Inject()(
           errors =>
             Future.successful(
               BadRequest(Json.toJson(
-                ValidationError(400, "Некорректные данные для обновления задачи: " + JsError.toJson(errors).toString())
+                ValidationError(400, UpdateIncorrectDataErrorMsg + JsError.toJson(errors).toString())
               ))
             ),
           task =>
             todoService.update(id, task.title)
               .map {
-                case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> s"Задача $id обновлена", "data" -> todo))
-                case None       => NotFound(Json.toJson(ValidationError(404, s"Задача $id не найдена")))
+                case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> UpdatedMsg(id), "data" -> todo))
+                case None       => NotFound(Json.toJson(ValidationError(404, NotFoundMsg(id))))
               }
-              .recoverWith { case ex => handleError(ex, s"Ошибка при обновлении задачи id=$id") }
+              .recoverWith { case ex => handleError(ex, UpdatedErrorMsg(id)) }
         )
     }
   }
@@ -106,10 +108,10 @@ class TodoController @Inject()(
       case Right(_) =>
         todoService.delete(id)
           .map {
-            case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> s"Задача $id удалена", "data" -> todo))
-            case _          => NotFound(Json.toJson(ValidationError(404, s"Задача $id не найдена")))
+            case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> DeletedMsg(id), "data" -> todo))
+            case _          => NotFound(Json.toJson(ValidationError(404, NotFoundMsg(id))))
           }
-          .recoverWith { case ex => handleError(ex, s"Ошибка при удалении задачи id=$id") }
+          .recoverWith { case ex => handleError(ex, DeletedErrorMsg(id)) }
     }
   }
 
@@ -120,10 +122,10 @@ class TodoController @Inject()(
       case Right(_) =>
         todoService.complete(id)
           .map {
-            case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> s"Задача $id выполнена", "data" -> todo))
-            case _          => NotFound(Json.toJson(ValidationError(404, s"Задача $id не найдена")))
+            case Some(todo) => Ok(Json.obj("code" -> 0, "message" -> CompletedMsg(id), "data" -> todo))
+            case _          => NotFound(Json.toJson(ValidationError(404, NotFoundMsg(id))))
           }
-          .recoverWith { case ex => handleError(ex, s"Ошибка при завершении задачи id=$id") }
+          .recoverWith { case ex => handleError(ex, CompletedErrorMsg(id: Int)) }
     }
   }
 
@@ -134,31 +136,31 @@ class TodoController @Inject()(
       case Right(_) =>
         todoService.uncomplete(id)
           .map {
-            case Some(todo)  => Ok(Json.obj("code" -> 0, "message" -> s"Задача $id отмечена как невыполненная", "data" -> todo))
-            case _           => NotFound(Json.toJson(ValidationError(404, s"Задача $id не найдена")))
+            case Some(todo)  => Ok(Json.obj("code" -> 0, "message" -> UncompletedMsg(id), "data" -> todo))
+            case _           => NotFound(Json.toJson(ValidationError(404, NotFoundMsg(id))))
           }
-          .recoverWith { case ex => handleError(ex, s"Ошибка при отмене завершения задачи id=$id") }
+          .recoverWith { case ex => handleError(ex, UncompletedErrorMsg(id)) }
     }
   }
 
   // Отметить все задачи как выполненные
   def completeAll: Action[AnyContent] = Action.async {
     todoService.completeAll()
-      .map(todos => Ok(Json.obj("code" -> 0, "message" -> s"Выполнено ${todos.size} задач(и)", "data" -> todos)))
-      .recoverWith { case ex => handleError(ex, "Ошибка при завершении всех задач") }
+      .map(todos => Ok(Json.obj("code" -> 0, "message" -> CompletedAllMsg(todos.size), "data" -> todos)))
+      .recoverWith { case ex => handleError(ex, CompletedAllErrorMsg) }
   }
 
   // Отметить все задачи как невыполненные
   def uncompleteAll: Action[AnyContent] = Action.async {
     todoService.uncompleteAll()
-      .map(todos => Ok(Json.obj("code" -> 0, "message" -> s"Отменено выполнение ${todos.size} задач(и)", "data" -> todos)))
-      .recoverWith { case ex => handleError(ex, "Ошибка при отмене завершения всех задач") }
+      .map(todos => Ok(Json.obj("code" -> 0, "message" -> UncompletedAllMsg(todos.size), "data" -> todos)))
+      .recoverWith { case ex => handleError(ex, UncompletedAllErrorMsg) }
   }
 
   // Удалить все выполненные задачи
   def deleteCompleted(): Action[AnyContent] = Action.async {
     todoService.deleteCompleted()
-      .map(todos => Ok(Json.obj("code" -> 0, "message" -> s"Удалено ${todos.size} выполненных задач(и)", "data" -> todos)))
-      .recoverWith { case ex => handleError(ex, "Ошибка при удалении завершённых задач") }
+      .map(todos => Ok(Json.obj("code" -> 0, "message" -> DeletedCompletedMsg(todos.size), "data" -> todos)))
+      .recoverWith { case ex => handleError(ex, DeletedCompletedErrorMsg) }
   }
 }

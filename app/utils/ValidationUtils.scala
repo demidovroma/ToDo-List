@@ -4,16 +4,17 @@ import models.dto.ValidationError
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.mvc.Results._
-import models.implicits.JsonFormats._
-
 import scala.concurrent.{ExecutionContext, Future}
+
+import models.implicits.JsonFormats._
+import utils.Messages.Todo._
 
 object ValidationUtils {
 
   def validateId(id: Int)(implicit ec: ExecutionContext): Future[Either[Result, Unit]] =
     if (id <= 0)
       Future.successful(Left(BadRequest(Json.toJson(
-        ValidationError(400, "ID должен быть положительным")
+        ValidationError(400, InvalidIdMsg)
       ))))
     else
       Future.successful(Right(()))
@@ -22,12 +23,12 @@ object ValidationUtils {
     (json \ "title").asOpt[String] match {
       case None =>
         Future.successful(Left(BadRequest(Json.toJson(
-          ValidationError(400, "Поле 'title' обязательно для заполнения")
+          ValidationError(400, TitleRequiredMsg)
         ))))
 
       case Some(title) if title.trim.isEmpty =>
         Future.successful(Left(BadRequest(Json.toJson(
-          ValidationError(400, "Title не может быть пустым")
+          ValidationError(400, TitleEmptyMsg)
         ))))
 
       case Some(title) =>

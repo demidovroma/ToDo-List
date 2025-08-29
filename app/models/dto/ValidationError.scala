@@ -1,3 +1,5 @@
 package models.dto
 
-case class ValidationError(code: Int, message: String)
+import play.api.libs.json._
+
+case class ValidationError(code: Int, message: String, data: JsValue = JsNull)
